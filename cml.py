@@ -61,6 +61,7 @@ def SaveLab(labId, labFile):
         os.mkdir(labs_directory)
     with open(f'{os.path.join(labs_directory, labId)}.yaml', 'w') as file:
         file.write(labFile)
+    print(f'SaveLab: {labId}')
 
 def StopLab(token, labId):
     api_url = f"labs/{labId}/stop"
@@ -115,8 +116,10 @@ def SendEmail(email, title, content):
     try:
         sg = SendGridAPIClient(sendgrid_api_key)
         response = sg.send(message)
+        print(f'SendEmail: {response.status_code}')
     except Exception as e:
-        print(e.message)
+        #print(e.message)
+        print(f'SendEmail: FAILED')
 
 # Generate random password and save it to file
 temp_password = uuid.uuid4().hex
