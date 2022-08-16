@@ -1,3 +1,5 @@
-# exclude everything except directory foo/bar
+# exclude labs, temporary password, environment variables and pycache
+__pycache__
 /labs/*
 .env
+temp_password
