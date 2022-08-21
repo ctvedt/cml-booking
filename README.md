@@ -19,7 +19,7 @@ git clone https://github.com/ctvedt/cml-booking.git
 cd cml-booking/
 ```
 
-3. Create and activate an Python Virtual Environment  
+3. Create and activate a Python Virtual Environment  
 ```
 python -m venv venv
 source venv/bin/activate
