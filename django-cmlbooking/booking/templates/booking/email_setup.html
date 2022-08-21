@@ -1,0 +1,29 @@
+{% extends "booking/email_base.html" %}
+
+{% block title %}
+Påloggingsinformasjon!
+{% endblock %}
+
+{% block header %}
+    <h6 class="h6  fw-600" style="padding-top: 0; padding-bottom: 0; font-weight: 600 !important; vertical-align: baseline; font-size: 16px; line-height: 19.2px; margin: 0;" align="left">Brukernavn:</h6>
+    <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">{{ username }}</p>
+    <table class="s-2 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
+      <tbody>
+        <tr>
+          <td style="line-height: 8px; font-size: 8px; width: 100%; height: 8px; margin: 0;" align="left" width="100%" height="8">
+            &#160;
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h6 class="h6  fw-600" style="padding-top: 0; padding-bottom: 0; font-weight: 600 !important; vertical-align: baseline; font-size: 16px; line-height: 19.2px; margin: 0;" align="left">Passord:</h6>
+    <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">{{ password }}</p>
+{% endblock %}
+
+{% block content %}
+CML er nå satt opp og klar for bruk! Påloggingsinformasjonen står over, og du har full tilgang til CML i de neste 3 timene. Klikk på knappen under for å gå til Community Network sin CML.
+{% endblock %}
+
+{% block footer %}
+Sendt fra Community Network CML booking!
+{% endblock %}

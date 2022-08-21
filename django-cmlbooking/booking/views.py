@@ -1,6 +1,7 @@
 import uuid
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.template.loader import render_to_string
 from booking.models import Booking
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
@@ -97,8 +98,14 @@ def CreateNewBooking(request,day=None,slot=None):
                 Booking(timeslot=bookingtime.astimezone(), email=email, password=temp_password).save()
                 messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
                 
-                # Send info email
-                cml.SendEmail(email, 'CML booking info', f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du får en ny epost når din tid starter.')
+                # Send info email using template
+                context = {
+                    'booking_date': bookingtime.date(),
+                    'timeslot_from': '{:02}'.format(bookingtime.hour),
+                    'timeslot_to': '{:02}'.format(bookingtime.hour+3),
+                }
+                body = render_to_string('booking/email_info.html', context)
+                cml.SendEmail(email, 'Community Network - CML reservasjon', body)
 
                 # Return to home
                 return redirect('/')

@@ -160,13 +160,19 @@ def CleanUp(email, temp_password):
             labs_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'labs/')
             attachments.append(f'{labs_directory}{lab}.yaml')
 
-    # Send the user an email (with attachments, if any)
-    SendEmail(email, 'CML labs', f"Hi!<br><br>Your booked timeslot has unfortunatly come to an end, but don't worry!<br>All your labs (if any) are attached to this email!", attachments)
+    # Send the user an email (with attachments, if any) using template
+    body = render_to_string('booking/email_teardown.html')
+    SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
 
 def CreateTempUser(email, temp_password):
     # Get token and update username
     token = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
     UpdateUserPassword(token, GetAdminId(token), settings.CML_PASSWORD, temp_password)
-
-    # Send email to the user with the login information
-    SendEmail(email, 'CML login info', f'Use these login credentials:<br><br>Username: {settings.CML_USERNAME}<br>Password: {temp_password}')
+    
+    # Send email to the user with the login information using template
+    context = {
+        'username': settings.CML_USERNAME,
+        'password': temp_password,
+    }
+    body = render_to_string('booking/email_setup.html', context)
+    SendEmail(email, 'Community Network - CML påloggingsinformasjon', body)
