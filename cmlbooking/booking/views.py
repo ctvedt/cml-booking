@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from booking.models import Booking
+from .forms import BookingForm
 from datetime import date, datetime, timedelta
 
 def GetValidTimeslots(date):
@@ -56,6 +57,75 @@ def GetSlotStatus(date):
                 slotstatus[slot] = 'free'
 
     return slotstatus
+
+
+def CreateNewBooking(request,day=None,slot=None):
+    # Valid timeslots
+    timeslots = [0,3,6,9,12,15,18,21]
+       
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+
+        # Check whether it's valid:
+        if form.is_valid():
+
+            # Get email and domain from POST
+            email = request.POST.get('email', False)
+            domain = email.split('@')[1]
+            
+            # Validate email domain
+            if domain != 'soprasteria.com':
+                messages.add_message(request, messages.WARNING, 'E-postadressen du benyttet er ugyldig. Det er kun mulig å reservere med @soprasteria.com e-postadresser.')
+                return redirect(f'/booking/{day}/{slot}/')
+            
+            # Check if user has active booking
+            elif(Booking.objects.filter(email=email,timeslot__gte=datetime.now().astimezone())):
+                messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for e-postadresse din! For å gi alle mulighet til å bruke miljøet, er det kun mulig å ha én aktiv reservasjon per bruker.')
+                return redirect(f'/booking/{day}/{slot}/')
+            
+            else:
+                # Convert to datetime
+                todaysdate = datetime.combine(date.today(), datetime.min.time())
+                bookingtime = todaysdate + timedelta(days=day, hours=slot)
+                
+                # Save data and print success-message
+                Booking(timeslot=bookingtime.astimezone(), email=email).save()
+                messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
+                
+                # Return to home
+                return redirect('/')
+                
+    else:
+        # If values are set
+        if(day >= 0 and day < 5 and (slot in timeslots)):
+            
+            # Check if timeslot is valid, else redirect to home
+            if slot not in timeslots:
+                return redirect('/')
+            
+            # Convert to datetime
+            todaysdate = datetime.combine(date.today(), datetime.min.time())
+            bookingtime = todaysdate + timedelta(days=day, hours=slot)
+    
+            # Check if booking exist for requested date
+            if(Booking.objects.filter(timeslot=bookingtime)):
+                messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for denne datoen og tidsrommet.')
+                return redirect('/')
+    
+            # Render form
+            form = BookingForm()
+            context = {
+                'day': day,
+                'slot': slot,
+                'bookingtime': bookingtime,
+                'form': form,
+            }
+            return render(request, 'booking/booking.html', context)
+
+        else:
+            # Redirect to home
+            messages.add_message(request, messages.ERROR, 'Ugyldige verdier oppgitt.')
+            return redirect('/')
 
 
 def RenderCalendar(request):
