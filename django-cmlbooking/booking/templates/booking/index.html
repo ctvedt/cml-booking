@@ -4,7 +4,7 @@
 <div class="row">
 {% for dayid, data in calendardata.items %}
   <div class="col">
-    <h3 class="pb-3 pt-5 text-nowrap">{{ data.dayname|title }} {{ data.daydate }}</h3>
+    <h3 class="pb-3 pt-3 text-nowrap">{{ data.dayname|title }} {{ data.daydate }}</h3>
     {% for time, status in data.bookingdata.items %}
         {% if status == 'invalid' %}
         <button type="button" class="btn btn-secondary btn-lg btn-block" disabled>{{ time|stringformat:"02d" }}:00 - {{ time|add:"3"|stringformat:"02d" }}:00</button>

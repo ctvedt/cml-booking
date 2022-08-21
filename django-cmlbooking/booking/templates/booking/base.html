@@ -11,7 +11,7 @@
     <title>{% block title %}Community Network{% endblock %}</title>
   </head>
   <body>
-    <div class="container-fluid px-5 py-3">
+    <div class="container-fluid px-0">
     
       <!-- Alerts -->
       {% if messages %}
@@ -21,31 +21,39 @@
       {% endif %}
             
       <!-- Header -->
-      <h1 class="pb-2 display-4">Community Network - Reservasjon av CML</h1>
+      <h1 class="px-5 bg-light pb-3 pt-1 display-4">Community Network - Reservasjon av CML</h1>
+      <div class="container-fluid px-5">
       <p class="lead">
         Velkommen til systemet for å reservere labtid i CML! 
       </p>
       <p>
         Finn en ledig tidsluke som passer din timeplan, klikk på den og fyll ut e-postadressen din for å reservere. Du vil motta både bekreftelse og mer informasjon per e-post. <br />
-        <p class="text-left font-weight-light font-italic">
-          Spørsmål og kommentarer? Vennligst benytt Lab-kanalen i Teams-gruppen vår!
-        </p>
       </p>
-
       <!-- Content -->
       {% block content %}
       {% endblock %}
-      
       <!-- Footer -->
-      <p class="mt-4 text-right font-weight-light font-italic">
-        Utviklet i 2022 av Christopher W. Tvedt. 
-        <a href="https://github.com/ctvedt/cml-booking" class="link-primary" target="_blank">Kildekoden ligger på GitHub 
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-github" viewBox="0 0 16 18">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
-        </svg></a>
-      </p>    
+      <div class="row">
+        <div class="col">
+          <p class="mt-4 text-left font-weight-light font-italic">
+            Spørsmål og kommentarer? Vennligst benytt Lab-kanalen i Teams-gruppen vår!
+          </p>
+        </div>
+        <div class="col">
+          <p class="mt-4 text-right font-weight-light font-italic">
+            Utviklet i 2022 av Christopher W. Tvedt. 
+            <a href="https://github.com/ctvedt/cml-booking" class="link-primary" target="_blank">Kildekoden ligger på GitHub 
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-github" viewBox="0 0 16 18">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+              </svg>
+            </a>
+          </p>
+        </div>
+      </div>
+       
       <!-- Container end -->
-    </div>  
+    </div>
+    </div>
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
