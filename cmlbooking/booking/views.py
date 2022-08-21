@@ -1,3 +1,4 @@
+import uuid
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from booking.models import Booking
@@ -89,8 +90,11 @@ def CreateNewBooking(request,day=None,slot=None):
                 todaysdate = datetime.combine(date.today(), datetime.min.time())
                 bookingtime = todaysdate + timedelta(days=day, hours=slot)
                 
+                # Create temporary password for this booking
+                temp_password = uuid.uuid4().hex
+
                 # Save data and print success-message
-                Booking(timeslot=bookingtime.astimezone(), email=email).save()
+                Booking(timeslot=bookingtime.astimezone(), email=email, password=temp_password).save()
                 messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
                 
                 # Send info email

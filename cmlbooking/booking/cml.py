@@ -1,6 +1,5 @@
 import requests
 from time import sleep
-import uuid
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import os
@@ -92,15 +91,6 @@ def UpdateUserPassword(token, userId, oldpw, newpw):
     print("UpdateUserPassword: " + str(r.status_code))
     return r.status_code
 
-def SaveTempPassword(password):
-    with open(f'temp_password', 'w') as file:
-        file.write(password)
-
-def GetTempPassword():
-    with open(f'temp_password', 'r') as file:
-        data = file.read().rstrip()
-    return data
-
 def SendEmail(email, title, content, attachments=None):
     # Create message
     message = Mail(
@@ -140,10 +130,7 @@ def SendEmail(email, title, content, attachments=None):
     except Exception as e:
         print(f'SendEmail: FAILED')
 
-def CleanUp(email):
-    # Get temporary password
-    temp_password = GetTempPassword()
-
+def CleanUp(email, temp_password):
     # Authenticate and get all labs
     token = GetToken(settings.CML_USERNAME, temp_password)
     labs = GetListOfAllLabs(token)
@@ -174,11 +161,7 @@ def CleanUp(email):
     # Send the user an email (with attachments, if any)
     SendEmail(email, 'CML labs', f"Hi!<br><br>Your booked timeslot has unfortunatly come to an end, but don't worry!<br>All your labs (if any) are attached to this email!", attachments)
 
-def CreateTempUser(email):
-    # Generate random password and save it to file
-    temp_password = uuid.uuid4().hex
-    SaveTempPassword(temp_password)
-
+def CreateTempUser(email, temp_password):
     # Get token and update username
     token = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
     UpdateUserPassword(token, GetAdminId(token), settings.CML_PASSWORD, temp_password)

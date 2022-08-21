@@ -49,7 +49,7 @@ def SetUpLab():
         booking = bookednow.first()
 
         # Create temporary password and send to user
-        cml.CreateTempUser(booking.email)
+        cml.CreateTempUser(booking.email, booking.password)
     else:
         print('SetUpLab: not a booked slot, no setup to be done')
 
@@ -66,7 +66,7 @@ def TearDownLab():
         booking = bookednow.first()
 
         # Clean up after booked session
-        cml.CleanUp(booking.email)
+        cml.CleanUp(booking.email, booking.password)
     else:
         print('TearDownLab: no booked slot, no cleanup to be done')
 
