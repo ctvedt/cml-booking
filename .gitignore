@@ -1,7 +1,7 @@
 # exclude labs, temporary password, environment variables and pycache
 __pycache__
 /venv/*
-labs/*
+labs/
 .env
 temp_password
 db.sqlite3
