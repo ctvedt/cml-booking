@@ -3,6 +3,7 @@ from django.contrib import messages
 from booking.models import Booking
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
+from . import cml
 
 def GetValidTimeslots(date):
     # Possible timeslots each day
@@ -92,6 +93,9 @@ def CreateNewBooking(request,day=None,slot=None):
                 Booking(timeslot=bookingtime.astimezone(), email=email).save()
                 messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
                 
+                # Send info email
+                cml.SendEmail(email, 'CML booking info', f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du får en ny epost når din tid starter.')
+
                 # Return to home
                 return redirect('/')
                 
