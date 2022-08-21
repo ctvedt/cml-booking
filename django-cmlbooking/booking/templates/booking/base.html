@@ -12,23 +12,24 @@
   </head>
   <body>
     <div class="container-fluid px-0">
-    
-      <!-- Alerts -->
-      {% if messages %}
-          {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
-          {% endfor %}
-      {% endif %}
             
       <!-- Header -->
-      <h1 class="px-5 bg-light pb-3 pt-1 display-4">Community Network - Reservasjon av CML</h1>
+      <h1 class="px-5 bg-light pb-3 pt-1 display-4 border-bottom">Community Network - Reservasjon av CML</h1>
       <div class="container-fluid px-5">
-      <p class="lead">
+      <p class="lead pt-3 mb-1">
         Velkommen til systemet for å reservere labtid i CML! 
       </p>
       <p>
         Finn en ledig tidsluke som passer din timeplan, klikk på den og fyll ut e-postadressen din for å reservere. Du vil motta både bekreftelse og mer informasjon per e-post. <br />
       </p>
+    
+      <!-- Alerts -->
+      {% if messages %}
+          {% for message in messages %}
+          <div class="mt-4 alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+          {% endfor %}
+      {% endif %}
+      
       <!-- Content -->
       {% block content %}
       {% endblock %}
