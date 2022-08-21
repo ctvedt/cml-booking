@@ -80,7 +80,7 @@ def CreateNewBooking(request,day=None,slot=None):
                 return redirect(f'/booking/{day}/{slot}/')
             
             # Check if user has active booking
-            elif(Booking.objects.filter(email=email,timeslot__gte=datetime.now().astimezone())):
+            elif(Booking.objects.filter(email=email,timeslot__gte=datetime.now().astimezone()-timedelta(hours=3))):
                 messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for e-postadresse din! For å gi alle mulighet til å bruke miljøet, er det kun mulig å ha én aktiv reservasjon per bruker.')
                 return redirect(f'/booking/{day}/{slot}/')
             
