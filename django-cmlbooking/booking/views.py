@@ -124,7 +124,7 @@ def CreateNewBooking(request,day=None,slot=None):
             bookingtime = todaysdate + timedelta(days=day, hours=slot)
     
             # Check if booking exist for requested date
-            if(Booking.objects.filter(timeslot=bookingtime)):
+            if(Booking.objects.filter(timeslot=bookingtime.astimezone())):
                 messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for denne datoen og tidsrommet.')
                 return redirect('/')
     
@@ -150,13 +150,13 @@ def RenderCalendar(request):
 
     # Get data for the next X days
     for i in range(numberofdays):
-        daydate = datetime.today() + timedelta(days=i)
+        daydate = datetime.today().astimezone() + timedelta(days=i)
         data[i] = {
             'dayid': i,
             'dayname': date_format(daydate, 'l'),
             'daydate': daydate.strftime("%d.%m"),
             'daydatestr': daydate.strftime("%Y-%d-%m"),
-            'bookingdata': GetSlotStatus(datetime.today() + timedelta(days=i)),
+            'bookingdata': GetSlotStatus(datetime.today().astimezone() + timedelta(days=i)),
         }
 
     context = {
