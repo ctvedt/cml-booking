@@ -3,6 +3,7 @@ from time import sleep
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import os
+import base64
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition, ContentId
 from django.conf import settings
@@ -156,7 +157,8 @@ def CleanUp(email, temp_password):
     attachments = []
     if userlabs:
         for lab in userlabs:
-            attachments.append(f'./labs/{lab}.yaml')
+            labs_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'labs/')
+            attachments.append(f'{labs_directory}{lab}.yaml')
 
     # Send the user an email (with attachments, if any)
     SendEmail(email, 'CML labs', f"Hi!<br><br>Your booked timeslot has unfortunatly come to an end, but don't worry!<br>All your labs (if any) are attached to this email!", attachments)
