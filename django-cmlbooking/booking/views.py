@@ -2,6 +2,7 @@ import uuid
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.template.loader import render_to_string
+from django.utils.formats import date_format
 from booking.models import Booking
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
@@ -152,7 +153,7 @@ def RenderCalendar(request):
         daydate = datetime.today() + timedelta(days=i)
         data[i] = {
             'dayid': i,
-            'dayname': daydate.strftime("%A"),
+            'dayname': date_format(daydate, 'l'),
             'daydate': daydate.strftime("%d.%m"),
             'daydatestr': daydate.strftime("%Y-%d-%m"),
             'bookingdata': GetSlotStatus(datetime.today() + timedelta(days=i)),
