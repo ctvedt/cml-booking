@@ -3,7 +3,6 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.formats import date_format
-from django.core.validators import validate_email
 from booking.models import Booking
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
@@ -76,14 +75,6 @@ def CreateNewBooking(request,day=None,slot=None):
 
             # Get email from form
             email = form.cleaned_data['email']
-
-            # Validate email
-            try:
-                validate_email(email)
-            except :
-                email_invalid = True
-            else:
-                email_invalid = False
             
             # Get domain from email
             domain = email.split('@')[-1]
