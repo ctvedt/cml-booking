@@ -81,7 +81,7 @@ def CreateNewBooking(request,day=None,slot=None):
             domain = email.split('@')[-1]
             
             # Invalid domain or email
-            if domain != BOOKING_ALLOWED_DOMAIN:
+            if domain != settings.BOOKING_ALLOWED_DOMAIN:
                 messages.add_message(request, messages.WARNING, 'E-postadressen du benyttet er ugyldig. Det er kun mulig å reservere med @soprasteria.com e-postadresser.')
                 return redirect(f'/booking/{day}/{slot}/')
             
