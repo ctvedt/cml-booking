@@ -107,6 +107,8 @@ def CreateNewBooking(request,day=None,slot=None):
                     'booking_date': bookingtime.date(),
                     'timeslot_from': '{:02}'.format(bookingtime.hour),
                     'timeslot_to': '{:02}'.format(bookingtime.hour+3),
+                    'cml_url': settings.CML_URL,
+                    'booking_url': settings.BOOKING_URL,
                 }
                 body = render_to_string('booking/email_info.html', context)
                 cml.SendEmail(email, 'Community Network - CML reservasjon', body)
