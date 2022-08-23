@@ -27,8 +27,8 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DJANGO_DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [config('DJANGO_ALLOWED_HOSTS')]
+CSRF_TRUSTED_ORIGINS = [config('DJANGO_CSRF_TRUSTED_ORIGINS')]
 
 # Application definition
 
@@ -110,9 +110,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'nb-no'
+LANGUAGE_CODE = config('DJANGO_LANGUAGE_CODE')
 
-TIME_ZONE = 'Europe/Oslo'
+TIME_ZONE = config('DJANGO_TIME_ZONE')
 
 USE_I18N = True
 
