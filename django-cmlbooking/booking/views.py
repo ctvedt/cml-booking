@@ -82,7 +82,7 @@ def CreateNewBooking(request,day=None,slot=None):
             
             # Invalid domain or email
             if domain != settings.BOOKING_ALLOWED_DOMAIN:
-                messages.add_message(request, messages.WARNING, f'E-postadressen du benyttet er ugyldig. Det er kun mulig å reservere med @{BOOKING_ALLOWED_DOMAIN} e-postadresser.')
+                messages.add_message(request, messages.WARNING, f'E-postadressen du benyttet er ugyldig. Det er kun mulig å reservere med @{settings.BOOKING_ALLOWED_DOMAIN} e-postadresser.')
                 return redirect(f'/booking/{day}/{slot}/')
             
             # Check if user has active booking
