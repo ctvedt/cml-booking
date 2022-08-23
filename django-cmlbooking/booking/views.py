@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.formats import date_format
+from django.conf import settings
 from booking.models import Booking
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
