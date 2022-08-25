@@ -1,9 +1,11 @@
 from django.db import models
+import uuid
 
 class Booking(models.Model):
     timeslot = models.DateTimeField()
     email = models.EmailField(blank=False)
-    password = models.TextField(default='NO_PASSWORD_SET')
+    password = models.CharField(max_length=50, default=uuid.uuid4().hex)
+    cancelcode = models.CharField(max_length=50, default=uuid.uuid4().hex)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     

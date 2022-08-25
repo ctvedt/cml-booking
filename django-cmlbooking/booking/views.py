@@ -1,4 +1,3 @@
-import uuid
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.template.loader import render_to_string
@@ -94,19 +93,18 @@ def CreateNewBooking(request,day=None,slot=None):
                 # Convert to datetime
                 todaysdate = datetime.combine(date.today(), datetime.min.time())
                 bookingtime = todaysdate + timedelta(days=day, hours=slot)
-                
-                # Create temporary password for this booking
-                temp_password = uuid.uuid4().hex
 
                 # Save data and print success-message
-                Booking(timeslot=bookingtime.astimezone(), email=email, password=temp_password).save()
-                messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}-{"{:02}".format(bookingtime.hour+3)} er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
+                booking = Booking(timeslot=bookingtime.astimezone(), email=email)
+                booking.save()
+                messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}:00-{"{:02}".format(bookingtime.hour+3)}:00 er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
                 
                 # Send info email using template
                 context = {
                     'booking_date': bookingtime.date(),
                     'timeslot_from': '{:02}'.format(bookingtime.hour),
                     'timeslot_to': '{:02}'.format(bookingtime.hour+3),
+                    'cancelcode': booking.cancelcode,
                     'cml_url': settings.CML_URL,
                     'booking_url': settings.BOOKING_URL,
                 }
@@ -148,6 +146,14 @@ def CreateNewBooking(request,day=None,slot=None):
             messages.add_message(request, messages.ERROR, 'Ugyldige verdier oppgitt.')
             return redirect('/')
 
+
+def CancelBooking(request, cancelcode=None):
+    if cancelcode:
+        #TODO
+        messages.add_message(request, messages.SUCCESS, f'Din booking ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
+        return redirect('/')
+    else:
+        return redirect('/')
 
 def RenderCalendar(request):
     data = {}

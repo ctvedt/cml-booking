@@ -8,4 +8,5 @@ urlpatterns = [
     path('booking/', RedirectView.as_view(url='/')),
     path('booking/<int:day>/', views.CreateNewBooking),
     path('booking/<int:day>/<int:slot>/', views.CreateNewBooking),
+    path('cancel/<str:cancelcode>/', views.CancelBooking)
 ]
