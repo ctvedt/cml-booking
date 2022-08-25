@@ -149,11 +149,18 @@ def CreateNewBooking(request,day=None,slot=None):
 
 def CancelBooking(request, cancelcode=None):
     if cancelcode:
-        #TODO
-        messages.add_message(request, messages.SUCCESS, f'Din booking ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
-        return redirect('/')
-    else:
-        return redirect('/')
+        # Find booking with cancellation code
+        booking = Booking.objects.filter(cancelcode=cancelcode).first()
+        if booking:
+            # Booking found, now delete it
+            booking.delete()
+            messages.add_message(request, messages.SUCCESS, f'Din reservasjon ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
+        else:
+            # Not found, print warning
+            messages.add_message(request, messages.WARNING, f'Det ser ikke ut til at det finnes en reservasjoner i databasen med den kanselleringskoden. Ingen reservasjoner ble derfor slettet.')
+        
+    # Redirect to home
+    return redirect('/')
 
 def RenderCalendar(request):
     data = {}
