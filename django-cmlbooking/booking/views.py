@@ -23,6 +23,10 @@ def GetValidTimeslots(date):
         elif(date.date() == datetime.today().date()):
             if(datetime.now().hour < slot):
                 validtimeslots[slot] = 'valid'
+            # Ongoing slot
+            elif(datetime.now().hour == slot or datetime.now().hour == slot-1 or datetime.now().hour == slot-2):
+                validtimeslots[slot] = 'valid'
+            # Passed slot
             else:
                 validtimeslots[slot] = 'invalid'
 
@@ -110,6 +114,10 @@ def CreateNewBooking(request,day=None,slot=None):
                 }
                 body = render_to_string('booking/email_info.html', context)
                 cml.SendEmail(email, 'Community Network - CML reservasjon', body)
+
+                # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
+                if(bookingtime.astimezone() <= datetime.now().astimezone()):
+                    cml.CreateTempUser(booking.email, booking.password)
 
                 # Return to home
                 return redirect('/')
