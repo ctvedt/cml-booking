@@ -174,6 +174,8 @@ def CreateTempUser(email, temp_password):
     context = {
         'username': settings.CML_USERNAME,
         'password': temp_password,
+        'cml_url': settings.CML_URL,
+        'booking_url': settings.BOOKING_URL,
     }
     body = render_to_string('booking/email_setup.html', context)
     SendEmail(email, 'Community Network - CML påloggingsinformasjon', body)
