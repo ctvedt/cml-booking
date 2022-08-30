@@ -162,7 +162,11 @@ def CleanUp(email, temp_password):
             attachments.append(f'{labs_directory}{lab}.yaml')
 
     # Send the user an email (with attachments, if any) using template
-    body = render_to_string('booking/email_teardown.html')
+    context = {
+        'cml_url': settings.CML_URL,
+        'booking_url': settings.BOOKING_URL,
+    }
+    body = render_to_string('booking/email_teardown.html' context)
     SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
 
 def CreateTempUser(email, temp_password):
