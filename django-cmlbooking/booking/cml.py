@@ -166,7 +166,7 @@ def CleanUp(email, temp_password):
         'cml_url': settings.CML_URL,
         'booking_url': settings.BOOKING_URL,
     }
-    body = render_to_string('booking/email_teardown.html' context)
+    body = render_to_string('booking/email_teardown.html', context)
     SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
 
 def CreateTempUser(email, temp_password):
