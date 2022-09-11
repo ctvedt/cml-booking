@@ -21,8 +21,19 @@ def GetValidTimeslots(date):
 
         # Exclude todays timeslots that has passed
         elif(date.date() == datetime.today().date()):
+            # Slot later today
             if(datetime.now().hour < slot):
                 validtimeslots[slot] = 'valid'
+
+            # Ongoing slot, 1st or 2nd hour
+            elif(datetime.now().hour == slot or datetime.now().hour-1 == slot):
+                validtimeslots[slot] = 'valid'
+
+            # Ongoing slot, 3rd hour. Booking not possible last 30 minutes
+            elif(datetime.now().hour-2 == slot and datetime.now().minute < 30):
+                validtimeslots[slot] = 'valid'
+
+            # Passed slot
             else:
                 validtimeslots[slot] = 'invalid'
 
@@ -111,6 +122,10 @@ def CreateNewBooking(request,day=None,slot=None):
                 body = render_to_string('booking/email_info.html', context)
                 cml.SendEmail(email, 'Community Network - CML reservasjon', body)
 
+                # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
+                if(bookingtime.astimezone() <= datetime.now().astimezone()):
+                    cml.CreateTempUser(booking.email, booking.password)
+
                 # Return to home
                 return redirect('/')
                 
@@ -152,9 +167,22 @@ def CancelBooking(request, cancelcode=None):
         # Find booking with cancellation code
         booking = Booking.objects.filter(cancelcode=cancelcode).first()
         if booking:
-            # Booking found, now delete it
-            booking.delete()
-            messages.add_message(request, messages.SUCCESS, f'Din reservasjon ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
+            # Booking found
+
+            # If booking in the future
+            if(booking.timeslot.astimezone() > datetime.now().astimezone()-timedelta(hours=3)):
+
+                # If ongoing timeslot, clean up
+                if(booking.timeslot.astimezone() <= datetime.now().astimezone()):
+                    # Clean up
+                    cml.CleanUp(booking.email, booking.password)
+
+                # Delete ongoing or future bookings
+                booking.delete()
+                messages.add_message(request, messages.SUCCESS, f'Din reservasjon ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
+            else:
+                # Booking in the past
+                messages.add_message(request, messages.WARNING, f'Reservasjon funnet, men det er ikke mulig å kansellere reservasjoner som er gjort i fortiden.')
         else:
             # Not found, print warning
             messages.add_message(request, messages.WARNING, f'Det ser ikke ut til at det finnes en reservasjoner i databasen med den kanselleringskoden. Ingen reservasjoner ble derfor slettet.')
