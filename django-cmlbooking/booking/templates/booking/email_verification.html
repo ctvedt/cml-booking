@@ -1,0 +1,29 @@
+{% extends "booking/email_base.html" %}
+
+{% block title %}
+Din e-postadresse må verifiseres
+{% endblock %}
+
+{% block header %}
+<p>
+Før du kan reservere tid i CML, må din e-postadresse verifiseres for å hindre misbruk. Klikk på knappen under for å verifisere din e-postadresse!
+</p>
+    <p>Klikk her for å verifisere din e-postadresse:</p>
+    <table class="btn btn-success p-3 m-5 fw-700" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-radius: 6px; border-collapse: separate !important; font-weight: 700 !important;">
+      <tbody>
+        <tr>
+          <td style="line-height: 24px; font-size: 16px; border-radius: 6px; font-weight: 700 !important; margin: 0;" align="center" bgcolor="#28a745">
+            <a href="{{ booking_url }}verification/{{ verificationcode }}/" style="color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: 700 !important; white-space: nowrap; background-color: #28a745; padding: 12px; border: 1px solid #28a745;">Verifiser e-postadressen</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+{% endblock %}
+
+{% block content %}
+Etter at du har verifisert deg, må du gå inn på reservasjonssiden og reservere ønsket tidspunkt på nytt. Verifikasjon er kun nødvendig første gang du bruker reservasjonssystemet.
+{% endblock %}
+
+{% block footer %}
+Sendt fra Community Network CML booking!
+{% endblock %}
