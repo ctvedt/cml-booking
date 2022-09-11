@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.formats import date_format
 from django.conf import settings
-from booking.models import Booking
+from booking.models import Booking, VerifiedEmail
 from .forms import BookingForm
 from datetime import date, datetime, timedelta
 from . import cml
@@ -101,33 +101,75 @@ def CreateNewBooking(request,day=None,slot=None):
                 return redirect(f'/booking/{day}/{slot}/')
             
             else:
-                # Convert to datetime
-                todaysdate = datetime.combine(date.today(), datetime.min.time())
-                bookingtime = todaysdate + timedelta(days=day, hours=slot)
-
-                # Save data and print success-message
-                booking = Booking(timeslot=bookingtime.astimezone(), email=email)
-                booking.save()
-                messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}:00-{"{:02}".format(bookingtime.hour+3)}:00 er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
+                # Check if user email has an verified email
+                user = VerifiedEmail.objects.filter(email=email).first()
+                verified = False
                 
-                # Send info email using template
-                context = {
-                    'booking_date': bookingtime.date(),
-                    'timeslot_from': '{:02}'.format(bookingtime.hour),
-                    'timeslot_to': '{:02}'.format(bookingtime.hour+3),
-                    'cancelcode': booking.cancelcode,
-                    'cml_url': settings.CML_URL,
-                    'booking_url': settings.BOOKING_URL,
-                }
-                body = render_to_string('booking/email_info.html', context)
-                cml.SendEmail(email, 'Community Network - CML reservasjon', body)
+                if(user):
+                    # User exist
+                    if(user.verified):
+                        # Email is verified
+                        verified = True
 
-                # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
-                if(bookingtime.astimezone() <= datetime.now().astimezone()):
-                    cml.CreateTempUser(booking.email, booking.password)
+                # User email has been verified previously, so go ahead and get this booked!
+                if(verified):
+                    # Convert to datetime
+                    todaysdate = datetime.combine(date.today(), datetime.min.time())
+                    bookingtime = todaysdate + timedelta(days=day, hours=slot)
+    
+                    # Save data and print success-message
+                    booking = Booking(timeslot=bookingtime.astimezone(), email=email)
+                    booking.save()
+                    messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}:00-{"{:02}".format(bookingtime.hour+3)}:00 er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
+                    
+                    # Send info email using template
+                    context = {
+                        'booking_date': bookingtime.date(),
+                        'timeslot_from': '{:02}'.format(bookingtime.hour),
+                        'timeslot_to': '{:02}'.format(bookingtime.hour+3),
+                        'cancelcode': booking.cancelcode,
+                        'cml_url': settings.CML_URL,
+                        'booking_url': settings.BOOKING_URL,
+                    }
+                    body = render_to_string('booking/email_info.html', context)
+                    cml.SendEmail(email, 'Community Network - CML reservasjon', body)
+    
+                    # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
+                    if(bookingtime.astimezone() <= datetime.now().astimezone()):
+                        cml.CreateTempUser(booking.email, booking.password)
+    
+                    # Return to home
+                    return redirect('/')
+                
+                # User not verified, so send email and redirect to homepage with warning message
+                else:
+                    # Check first if user has an unverified entry in database
+                    if (user):
+                        # Old unverified entry found, reusing
+                        context = {
+                            'verificationcode': user.verificationcode,
+                            'cml_url': settings.CML_URL,
+                            'booking_url': settings.BOOKING_URL,
+                        }
+                        
+                    else: 
+                        # Create entry in verification database
+                        verification = VerifiedEmail(email=email)
+                        verification.save()
 
-                # Return to home
-                return redirect('/')
+                        context = {
+                            'verificationcode': verification.verificationcode,
+                            'cml_url': settings.CML_URL,
+                            'booking_url': settings.BOOKING_URL,
+                        }
+                    
+                    # Send verification email using template
+                    body = render_to_string('booking/email_verification.html', context)
+                    cml.SendEmail(email, 'Din e-postadresse må verifiseres!', body)
+
+                    # Return home with warning message
+                    messages.add_message(request, messages.ERROR, 'Din e-postadresse må verifiseres før du kan reservere tid! Du mottar straks en epost med instruksjoner for hvordan du verifiserer deg.')
+                    return redirect('/')
                 
     else:
         # If values are set
@@ -161,6 +203,23 @@ def CreateNewBooking(request,day=None,slot=None):
             messages.add_message(request, messages.ERROR, 'Ugyldige verdier oppgitt.')
             return redirect('/')
 
+def Verification(request, verificationcode=None):
+    if verificationcode:
+        # Find entry with this verificationcode
+        verification = VerifiedEmail.objects.filter(verificationcode=verificationcode).first()
+        
+        if verification:
+            # Found! Set to verified and save
+            verification.verified = True
+            verification.save()
+            messages.add_message(request, messages.SUCCESS, f'Din e-postadresse er nå verifisert! Du kan nå reservere ønsket tidspunkt under.')
+
+        else:
+            # Not found. Display warning message
+            messages.add_message(request, messages.WARNING, f'Det ser ikke ut til at det finnes en e-postadresse i databasen med oppgitt verifikasjonskode.')
+        
+    # Redirect to home
+    return redirect('/')
 
 def CancelBooking(request, cancelcode=None):
     if cancelcode:
