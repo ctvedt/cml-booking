@@ -20,3 +20,12 @@ class Booking(models.Model):
         self.password = random_uuid()
         self.cancelcode = random_uuid()
         super(Booking, self).save(*args, **kwargs)
+
+class VerifiedEmail(models.Model):
+    email = models.EmailField(blank=False)
+    verified = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.email} - {self.verified}'
