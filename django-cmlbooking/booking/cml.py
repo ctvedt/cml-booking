@@ -60,6 +60,13 @@ def StopLab(token, labId):
     print("StopLab: " + str(r.status_code))
     return r.status_code
 
+def WipeLab(token, labId):
+    api_url = f"labs/{labId}/wipe"
+    head = {'Authorization': f'Bearer {token}'}
+    r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
+    print("WipeLab: " + str(r.status_code))
+    return r.status_code
+
 def DeleteLab(token, labId):
     api_url = f"labs/{labId}"
     head = {'Authorization': f'Bearer {token}'}
@@ -142,10 +149,12 @@ def CleanUp(email, temp_password):
     for lab in labs:
         nodes = GetNodesInLab(token, lab)
         for node in nodes:
+            # TODO: Extract of config only works if node is running, so should check that first
             SaveNodeConfig(token, lab,node)
         userlabs.append(lab)
         SaveLab(lab, DownloadLab(token, lab))
         StopLab(token, lab)
+        WipeLab(token, lab)
         DeleteLab(token, lab)
     
     # Reset password
