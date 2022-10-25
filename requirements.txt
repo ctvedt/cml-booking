@@ -1,6 +1,6 @@
 requests==2.28.1
 python-decouple==3.6
 sendgrid==6.9.7
-Django==4.1
+Django==4.1.2
 django-apscheduler==0.6.2
 django-crispy-forms==1.14.0
