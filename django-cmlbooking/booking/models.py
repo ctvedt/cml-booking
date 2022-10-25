@@ -34,3 +34,13 @@ class VerifiedEmail(models.Model):
     def save(self, *args, **kwargs):
         self.verificationcode = random_uuid()
         super(VerifiedEmail, self).save(*args, **kwargs)
+
+class Maintenance(models.Model):
+    start = models.DateTimeField(blank=False)
+    end = models.DateTimeField(blank=False)
+    reason = models.CharField(max_length=250, blank=True, null=True, editable=True)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Maintenance {self.start} - {self.end}'

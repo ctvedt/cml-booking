@@ -3,10 +3,37 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.formats import date_format
 from django.conf import settings
-from booking.models import Booking, VerifiedEmail
+from booking.models import Booking, VerifiedEmail, Maintenance
 from .forms import BookingForm
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, time
+from django.utils import timezone
 from . import cml
+
+def BlockedByMaintenance(date):
+    # Check if date is in range of a maintenance
+    maintenance = Maintenance.objects.filter(start__lte=date.astimezone(), end__gte=date.astimezone())
+    if maintenance.count():
+        return True
+    else:
+        return False
+
+def GetMaintenanceMessages():
+    startdate = timezone.now()
+    enddate = startdate+timedelta(days=5)
+
+    # Empty list
+    messages = []
+
+    # Check all maintenances
+    maintenances = Maintenance.objects.filter(start__gte=startdate, start__lte=enddate)
+
+    # Append to list if any
+    if maintenances.count():
+        for maintenance in maintenances:
+            messages.append(maintenance.reason)
+
+    # Return messages
+    return messages
 
 def GetValidTimeslots(date):
     # Possible timeslots each day
@@ -15,31 +42,38 @@ def GetValidTimeslots(date):
 
     # Loop through all timeslots
     for slot in timeslots:
-        # Exclude past dates
-        if(date.date() < datetime.today().date()):
+        
+        # Exclude slots in maintenance
+        checkdate = datetime.combine(date.date(),time(slot,00))
+        if BlockedByMaintenance(checkdate):
             validtimeslots[slot] = 'invalid'
 
-        # Exclude todays timeslots that has passed
-        elif(date.date() == datetime.today().date()):
-            # Slot later today
-            if(datetime.now().hour < slot):
-                validtimeslots[slot] = 'valid'
-
-            # Ongoing slot, 1st or 2nd hour
-            elif(datetime.now().hour == slot or datetime.now().hour-1 == slot):
-                validtimeslots[slot] = 'valid'
-
-            # Ongoing slot, 3rd hour. Booking not possible last 30 minutes
-            elif(datetime.now().hour-2 == slot and datetime.now().minute < 30):
-                validtimeslots[slot] = 'valid'
-
-            # Passed slot
-            else:
+        else:
+            # Exclude past dates
+            if(date.date() < datetime.today().date()):
                 validtimeslots[slot] = 'invalid'
 
-        # All slots possible if date is in the future
-        else:
-            validtimeslots[slot] = 'valid'
+            # Exclude todays timeslots that has passed
+            elif(date.date() == datetime.today().date()):
+                # Slot later today
+                if(datetime.now().hour < slot):
+                    validtimeslots[slot] = 'valid'
+
+                # Ongoing slot, 1st or 2nd hour
+                elif(datetime.now().hour == slot or datetime.now().hour-1 == slot):
+                    validtimeslots[slot] = 'valid'
+
+                # Ongoing slot, 3rd hour. Booking not possible last 30 minutes
+                elif(datetime.now().hour-2 == slot and datetime.now().minute < 30):
+                    validtimeslots[slot] = 'valid'
+
+                # Passed slot
+                else:
+                    validtimeslots[slot] = 'invalid'
+
+            # All slots possible if date is in the future
+            else:
+                validtimeslots[slot] = 'valid'
 
     # Return all possible timeslots for date
     return validtimeslots
@@ -182,6 +216,10 @@ def CreateNewBooking(request,day=None,slot=None):
             # Convert to datetime
             todaysdate = datetime.combine(date.today(), datetime.min.time())
             bookingtime = todaysdate + timedelta(days=day, hours=slot)
+
+            # Blocked by maintenance
+            if BlockedByMaintenance(bookingtime):
+                return redirect('/')
     
             # Check if booking exist for requested date
             if(Booking.objects.filter(timeslot=bookingtime.astimezone())):
@@ -266,6 +304,7 @@ def RenderCalendar(request):
 
     context = {
         'calendardata': data,
+        'maintenance_messages': GetMaintenanceMessages()
     }
-
+    
     return render(request, 'booking/index.html', context)
