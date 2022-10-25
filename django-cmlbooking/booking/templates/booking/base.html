@@ -24,6 +24,13 @@
         Finn en ledig tidsluke som passer din timeplan, klikk på den og fyll ut e-postadressen din for å reservere. Du vil motta både bekreftelse og mer informasjon per e-post. <br />
       </p>
     
+      <!-- Maintenance messages -->
+      {% if maintenance_messages %}
+          {% for message in maintenance_messages %}
+          <div class="mt-4 alert alert-danger" role="alert">{{ message }}</div>
+          {% endfor %}
+      {% endif %}
+
       <!-- Alerts -->
       {% if messages %}
           {% for message in messages %}
