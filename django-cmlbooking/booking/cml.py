@@ -110,6 +110,10 @@ def SendEmail(email, title, content, attachments=None):
         subject=title,
         html_content=content)
 
+    # Add BCC if configured
+    if (settings.SENDGRID_BCC_EMAIL):
+        message.add_bcc(settings.SENDGRID_BCC_EMAIL)
+
     # If there are any attachment to be sendt
     if attachments:
         for file in attachments:
