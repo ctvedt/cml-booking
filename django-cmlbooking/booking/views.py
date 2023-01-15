@@ -8,6 +8,8 @@ from .forms import BookingForm
 from datetime import date, datetime, timedelta, time
 from django.utils import timezone
 from . import cml
+import logging
+logger = logging.getLogger(__name__)
 
 def BlockedByMaintenance(date):
     # Check if date is in range of a maintenance
@@ -123,15 +125,18 @@ def CreateNewBooking(request,day=None,slot=None):
             
             # Get domain from email
             domain = email.split('@')[-1]
-            
+            logger.info(f"CreateNewBooking: Started booking for {email}")
+
             # Invalid domain or email
             if domain != settings.BOOKING_ALLOWED_DOMAIN:
                 messages.add_message(request, messages.WARNING, f'E-postadressen du benyttet er ugyldig. Det er kun mulig å reservere med @{settings.BOOKING_ALLOWED_DOMAIN} e-postadresser.')
+                logger.error(f"CreateNewBooking: Invalid domain {domain}")
                 return redirect(f'/booking/{day}/{slot}/')
             
             # Check if user has active booking
             elif(Booking.objects.filter(email=email,timeslot__gte=datetime.now().astimezone()-timedelta(hours=3))):
                 messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for e-postadresse din! For å gi alle mulighet til å bruke miljøet, er det kun mulig å ha én aktiv reservasjon per bruker.')
+                logger.error(f"CreateNewBooking: User {email} already have an active booking")
                 return redirect(f'/booking/{day}/{slot}/')
             
             else:
@@ -147,6 +152,7 @@ def CreateNewBooking(request,day=None,slot=None):
 
                 # User email has been verified previously, so go ahead and get this booked!
                 if(verified):
+                    logger.info(f"CreateNewBooking: E-mail {email} already verified")
                     # Convert to datetime
                     todaysdate = datetime.combine(date.today(), datetime.min.time())
                     bookingtime = todaysdate + timedelta(days=day, hours=slot)
@@ -155,7 +161,8 @@ def CreateNewBooking(request,day=None,slot=None):
                     booking = Booking(timeslot=bookingtime.astimezone(), email=email)
                     booking.save()
                     messages.add_message(request, messages.SUCCESS, f'Din reservasjon for {bookingtime.date()} fra {"{:02}".format(bookingtime.hour)}:00-{"{:02}".format(bookingtime.hour+3)}:00 er bekreftet! Du vil straks motta en e-post med informasjon, i tillegg til en ny e-post med brukernavn og passord når din tidsperiode starter.')
-                    
+                    logger.info(f"CreateNewBooking: Booking successfully created for {email} for timeslot {bookingtime.astimezone()}")
+
                     # Send info email using template
                     context = {
                         'booking_date': bookingtime.date(),
@@ -166,10 +173,12 @@ def CreateNewBooking(request,day=None,slot=None):
                         'booking_url': settings.BOOKING_URL,
                     }
                     body = render_to_string('booking/email_info.html', context)
+                    logger.info(f"CreateNewBooking: Sending booking confirmation email to {email}")
                     cml.SendEmail(email, 'Community Network - CML reservasjon', body)
     
                     # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
                     if(bookingtime.astimezone() <= datetime.now().astimezone()):
+                        logger.info(f"CreateNewBooking: Booking is for ongoing timeslot, creating password for {booking.email}")
                         cml.CreateTempUser(booking.email, booking.password)
     
                     # Return to home
@@ -178,8 +187,11 @@ def CreateNewBooking(request,day=None,slot=None):
                 # User not verified, so send email and redirect to homepage with warning message
                 else:
                     # Check first if user has an unverified entry in database
+                    logger.warning(f"CreateNewBooking: Verification needed for {email}")
+
                     if (user):
                         # Old unverified entry found, reusing
+                        logger.info(f"CreateNewBooking: Verification code reused for unverified {email}")
                         context = {
                             'verificationcode': user.verificationcode,
                             'cml_url': settings.CML_URL,
@@ -190,6 +202,7 @@ def CreateNewBooking(request,day=None,slot=None):
                         # Create entry in verification database
                         verification = VerifiedEmail(email=email)
                         verification.save()
+                        logger.info(f"CreateNewBooking: New verification code created for {email}")
 
                         context = {
                             'verificationcode': verification.verificationcode,
@@ -198,6 +211,7 @@ def CreateNewBooking(request,day=None,slot=None):
                         }
                     
                     # Send verification email using template
+                    logger.info(f"CreateNewBooking: Sending verification code to {email}")
                     body = render_to_string('booking/email_verification.html', context)
                     cml.SendEmail(email, 'Din e-postadresse må verifiseres!', body)
 
@@ -219,11 +233,13 @@ def CreateNewBooking(request,day=None,slot=None):
 
             # Blocked by maintenance
             if BlockedByMaintenance(bookingtime):
+                logger.error(f"CreateNewBooking: Blocked by ongoing maintenance")
                 return redirect('/')
     
             # Check if booking exist for requested date
             if(Booking.objects.filter(timeslot=bookingtime.astimezone())):
                 messages.add_message(request, messages.ERROR, 'Det finnes allerede en reservasjon for denne datoen og tidsrommet.')
+                logger.error(f"CreateNewBooking: Already an booking for this timeslot")
                 return redirect('/')
     
             # Render form
@@ -239,22 +255,27 @@ def CreateNewBooking(request,day=None,slot=None):
         else:
             # Redirect to home
             messages.add_message(request, messages.ERROR, 'Ugyldige verdier oppgitt.')
+            logger.error(f"CreateNewBooking: Invalid values provided")
             return redirect('/')
 
 def Verification(request, verificationcode=None):
     if verificationcode:
         # Find entry with this verificationcode
         verification = VerifiedEmail.objects.filter(verificationcode=verificationcode).first()
+        logger.info(f"Verification: Looking for verification with code {verificationcode}")
         
         if verification:
             # Found! Set to verified and save
+            logger.info(f"Verification: Verification code {verificationcode} matching with user {verification.email}")
             verification.verified = True
             verification.save()
+            logger.info(f"Verification: User {verification.email} verified")
             messages.add_message(request, messages.SUCCESS, f'Din e-postadresse er nå verifisert! Du kan nå reservere ønsket tidspunkt under.')
 
         else:
             # Not found. Display warning message
             messages.add_message(request, messages.WARNING, f'Det ser ikke ut til at det finnes en e-postadresse i databasen med oppgitt verifikasjonskode.')
+            logger.error(f"Verification: Verification code {verificationcode} NOT found")
         
     # Redirect to home
     return redirect('/')
@@ -263,8 +284,11 @@ def CancelBooking(request, cancelcode=None):
     if cancelcode:
         # Find booking with cancellation code
         booking = Booking.objects.filter(cancelcode=cancelcode).first()
+        logger.info(f"CancelBooking: Looking for booking with cancel code {cancelcode}")
         if booking:
             # Booking found
+            logger.info(f"CancelBooking: Found booking {booking.timeslot.astimezone()} matching cancel code {cancelcode}")
+            logger.info(f"CancelBooking: This slot is booked by {booking.email}")
 
             # If booking in the future
             if(booking.timeslot.astimezone() > datetime.now().astimezone()-timedelta(hours=3)):
@@ -272,18 +296,22 @@ def CancelBooking(request, cancelcode=None):
                 # If ongoing timeslot, clean up
                 if(booking.timeslot.astimezone() <= datetime.now().astimezone()):
                     # Clean up
+                    logger.info(f"CancelBooking: Ongoing timeslot, starting cleanup for booking {booking.timeslot.astimezone()}")
                     cml.CleanUp(booking.email, booking.password)
 
                 # Delete ongoing or future bookings
                 booking.delete()
                 messages.add_message(request, messages.SUCCESS, f'Din reservasjon ble kansellert! Takk for at du kansellerte og gav andre muligheten til å reservere!')
+                logger.info(f"CancelBooking: Deleted booking {booking.timeslot.astimezone()}")
             else:
                 # Booking in the past
                 messages.add_message(request, messages.WARNING, f'Reservasjon funnet, men det er ikke mulig å kansellere reservasjoner som er gjort i fortiden.')
+                logger.warning(f"CancelBooking: Trying to cancel booking in the past, ignoring")
         else:
             # Not found, print warning
             messages.add_message(request, messages.WARNING, f'Det ser ikke ut til at det finnes en reservasjoner i databasen med den kanselleringskoden. Ingen reservasjoner ble derfor slettet.')
-        
+            logger.error(f"CancelBooking: No booking found booking with cancel code {cancelcode}")
+
     # Redirect to home
     return redirect('/')
 

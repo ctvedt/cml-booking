@@ -160,3 +160,42 @@ BOOKING_ALLOWED_DOMAIN = config('BOOKING_ALLOWED_DOMAIN')
 # SENDGRID
 SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 SENDGRID_FROM_EMAIL = config('SENDGRID_FROM_EMAIL')
+
+# LOGGING
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{asctime} {levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'logfile': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': 'logs/cmlbooking.log',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 30,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['logfile'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        '': {
+            'handlers': ['logfile'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
