@@ -37,6 +37,32 @@ def GetMaintenanceMessages():
     # Return messages
     return messages
 
+def BlockedByMaintenance(date):
+    # Check if date is in range of a maintenance
+    maintenance = Maintenance.objects.filter(start__lte=date.astimezone(), end__gte=date.astimezone())
+    if maintenance.count():
+        return True
+    else:
+        return False
+
+def GetMaintenanceMessages():
+    startdate = timezone.now()
+    enddate = startdate+timedelta(days=5)
+
+    # Empty list
+    messages = []
+
+    # Check all maintenances
+    maintenances = Maintenance.objects.filter(start__gte=startdate, start__lte=enddate)
+
+    # Append to list if any
+    if maintenances.count():
+        for maintenance in maintenances:
+            messages.append(maintenance.reason)
+
+    # Return messages
+    return messages
+
 def GetValidTimeslots(date):
     # Possible timeslots each day
     timeslots = [0,3,6,9,12,15,18,21]
