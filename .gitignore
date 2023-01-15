@@ -3,5 +3,5 @@ __pycache__
 /venv/*
 labs/
 .env
-temp_password
 db.sqlite3
+*.log
