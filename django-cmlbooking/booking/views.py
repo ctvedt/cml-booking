@@ -200,7 +200,7 @@ def CreateNewBooking(request,day=None,slot=None):
                     }
                     body = render_to_string('booking/email_info.html', context)
                     logger.info(f"CreateNewBooking: Sending booking confirmation email to {email}")
-                    cml.SendEmail(email, 'Community Network - CML reservasjon', body)
+                    statuscode = cml.SendEmail(email, 'Community Network - CML reservasjon', body)
     
                     # If booking of ongoing slot, create temporary password right away as scheduler will not catch this booking
                     if(bookingtime.astimezone() <= datetime.now().astimezone()):
@@ -239,7 +239,7 @@ def CreateNewBooking(request,day=None,slot=None):
                     # Send verification email using template
                     logger.info(f"CreateNewBooking: Sending verification code to {email}")
                     body = render_to_string('booking/email_verification.html', context)
-                    cml.SendEmail(email, 'Din e-postadresse må verifiseres!', body)
+                    statuscode = cml.SendEmail(email, 'Din e-postadresse må verifiseres!', body)
 
                     # Return home with warning message
                     messages.add_message(request, messages.ERROR, 'Din e-postadresse må verifiseres før du kan reservere tid! Du mottar straks en epost med instruksjoner for hvordan du verifiserer deg.')

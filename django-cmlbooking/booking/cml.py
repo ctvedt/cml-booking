@@ -24,7 +24,7 @@ def GetToken(username, password):
     payload = { "username": username, "password": password }
     r = requests.post(settings.CML_API_BASE_URL+api_url, json=payload, verify=False)
     logger.info(f"GetToken: {r.status_code}")
-    return r.json()
+    return r.json(), r.status_code
 
 def GetListOfAllLabs(token):
     """
@@ -38,7 +38,7 @@ def GetListOfAllLabs(token):
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"GetListOfAllLabs: {r.status_code}")
-    return r.json()
+    return r.json(), r.status_code
 
 def GetNodesInLab(token, labId):
     """
@@ -52,7 +52,7 @@ def GetNodesInLab(token, labId):
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"GetNodesInLab: {r.status_code}")
-    return r.json()
+    return r.json(), r.status_code
 
 def SaveNodeConfig(token, labId, node):
     """
@@ -66,7 +66,7 @@ def SaveNodeConfig(token, labId, node):
     head = {'Authorization': f'Bearer {token}'}
     r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"SaveNodeConfig: {r.status_code}")
-    return r.json()
+    return r.json(), r.status_code
 
 def DownloadLab(token, labId):
     """
@@ -80,7 +80,7 @@ def DownloadLab(token, labId):
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"DownloadLab: {r.status_code}")
-    return r.text
+    return r.text, r.status_code
 
 def SaveLab(labId, labFile):
     """
@@ -147,7 +147,7 @@ def GetAdminId(token):
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"GetAdminId: {r.status_code}")
-    return r.json()
+    return r.json(), r.status_code
 
 def LogAllUsersOut(token):
     """
@@ -232,10 +232,12 @@ def SendEmail(email, title, content, attachments=None):
         response = sendgrid_client.send(message)
         logger.info(f"SendEmail: Sending email to {email} with subject {title}.")
         logger.info(f"SendEmail: SendGridAPI status code: {response.status_code}")
+        return response.status_code
     except Exception as e:
         logger.error(f"SendEmail: Failed to send email")
         logger.info(f"SendEmail: SendGridAPI status code: {response.status_code}")
         logger.debug(f"SendEmail: Exception: {e}")
+        return response.status_code
 
 def CleanUp(email, temp_password):
     """
@@ -243,27 +245,29 @@ def CleanUp(email, temp_password):
     """
     # Authenticate and get all labs
     logger.info(f"CleanUp: Starting cleanup")
-    token = GetToken(settings.CML_USERNAME, temp_password)
-    labs = GetListOfAllLabs(token)
+    token, statuscode = GetToken(settings.CML_USERNAME, temp_password)
+    labs, statuscode = GetListOfAllLabs(token)
     
     # Loop through all labs, save config, stop and delete labs
     userlabs = []
     for lab in labs:
-        nodes = GetNodesInLab(token, lab)
+        nodes, statuscode = GetNodesInLab(token, lab)
         for node in nodes:
             # TODO: Extract of config only works if node is running, so should check that first
-            SaveNodeConfig(token, lab,node)
+            savenode, statuscode = SaveNodeConfig(token, lab,node)
         userlabs.append(lab)
-        SaveLab(lab, DownloadLab(token, lab))
-        StopLab(token, lab)
-        WipeLab(token, lab)
-        DeleteLab(token, lab)
+        savelab, statuscode = SaveLab(lab, DownloadLab(token, lab))
+        statuscode = StopLab(token, lab)
+        statucode = WipeLab(token, lab)
+        statuscode = DeleteLab(token, lab)
     
     # Reset password
-    UpdateUserPassword(token, GetAdminId(token), temp_password, settings.CML_PASSWORD)
+    adminid, statuscode = GetAdminId(token)
+    statuscode = UpdateUserPassword(token, adminid, temp_password, settings.CML_PASSWORD)
     
     # Re-authenticate and log out all users
-    LogAllUsersOut(GetToken(settings.CML_USERNAME, settings.CML_PASSWORD))
+    token, statuscode = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
+    statuscode = LogAllUsersOut(token)
     
     # Loop through the labs and create list of attachments, if any
     attachments = []
@@ -278,7 +282,7 @@ def CleanUp(email, temp_password):
         'booking_url': settings.BOOKING_URL,
     }
     body = render_to_string('booking/email_teardown.html', context)
-    SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
+    statuscode = SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
 
 def CreateTempUser(email, temp_password):
     """
@@ -286,8 +290,9 @@ def CreateTempUser(email, temp_password):
     """
     logger.info(f"CreateTempUser: Creating user for {email}")
     # Get token and update username
-    token = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
-    UpdateUserPassword(token, GetAdminId(token), settings.CML_PASSWORD, temp_password)
+    token, statuscode = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
+    adminid, statuscode = GetAdminId(token)
+    statuscode = UpdateUserPassword(token, adminid, settings.CML_PASSWORD, temp_password)
     
     # Send email to the user with the login information using template
     context = {
@@ -297,4 +302,4 @@ def CreateTempUser(email, temp_password):
         'booking_url': settings.BOOKING_URL,
     }
     body = render_to_string('booking/email_setup.html', context)
-    SendEmail(email, 'Community Network - CML påloggingsinformasjon', body)
+    statuscode = SendEmail(email, 'Community Network - CML påloggingsinformasjon', body)
