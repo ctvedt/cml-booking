@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 def GetToken(username, password):
+    """
+    Authenticate with username and password and get API token
+
+    Status codes:
+      Success: 200
+      Failure: 403
+    """
     api_url = "authenticate"
     payload = { "username": username, "password": password }
     r = requests.post(settings.CML_API_BASE_URL+api_url, json=payload, verify=False)
@@ -20,6 +27,13 @@ def GetToken(username, password):
     return r.json()
 
 def GetListOfAllLabs(token):
+    """
+    Return a list of all labs
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = "labs?show_all=true"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -27,6 +41,13 @@ def GetListOfAllLabs(token):
     return r.json()
 
 def GetNodesInLab(token, labId):
+    """
+    Return a list of all nodes in a given lab
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = f"labs/{labId}/nodes?data=false"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -34,6 +55,13 @@ def GetNodesInLab(token, labId):
     return r.json()
 
 def SaveNodeConfig(token, labId, node):
+    """
+    Extract and save node config for a given node in a given lab
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = f"labs/{labId}/nodes/{node}/extract_configuration"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -41,6 +69,13 @@ def SaveNodeConfig(token, labId, node):
     return r.json()
 
 def DownloadLab(token, labId):
+    """
+    Download a given lab
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = f"labs/{labId}/download"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -48,6 +83,9 @@ def DownloadLab(token, labId):
     return r.text
 
 def SaveLab(labId, labFile):
+    """
+    Save a given lab to file
+    """
     labs_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'labs/')
     if not os.path.isdir(labs_directory):
         os.mkdir(labs_directory)
@@ -56,6 +94,13 @@ def SaveLab(labId, labFile):
     logger.info(f"SaveLab: {labId}")
 
 def StopLab(token, labId):
+    """
+    Stop a given lab
+
+    Status codes:
+      Success: 204
+      Failure: any other values
+    """
     api_url = f"labs/{labId}/stop"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -63,6 +108,13 @@ def StopLab(token, labId):
     return r.status_code
 
 def WipeLab(token, labId):
+    """
+    Wipe a given lab
+
+    Status codes:
+      Success: 204
+      Failure: any other values
+    """
     api_url = f"labs/{labId}/wipe"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -70,6 +122,13 @@ def WipeLab(token, labId):
     return r.status_code
 
 def DeleteLab(token, labId):
+    """
+    Delete a given lab
+
+    Status codes:
+      Success: 204
+      Failure: any other values
+    """
     api_url = f"labs/{labId}"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.delete(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -77,6 +136,13 @@ def DeleteLab(token, labId):
     return r.status_code
 
 def GetAdminId(token):
+    """
+    Return the ID of the admin account
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = "users/admin/id"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -84,6 +150,13 @@ def GetAdminId(token):
     return r.json()
 
 def LogAllUsersOut(token):
+    """
+    Clears sessions and log out everyone
+
+    Status codes:
+      Success: 200
+      Failure: 401 / any other values
+    """
     api_url = "logout?clear_all_sessions=true"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.delete(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
@@ -91,11 +164,20 @@ def LogAllUsersOut(token):
     return r.status_code
 
 def UpdateUserPassword(token, userId, oldpw, newpw):
+    """
+    Updates the password for a given user ID
+
+    Status codes:
+      Success: 200
+      Failure: any other values
+    """
     api_url = f"users/{userId}/"
     head = {'Authorization': f'Bearer {token}'}
-    payload = { "password": {
-        "old_password": oldpw,
-        "new_password": newpw
+    payload = { 
+        "password": 
+        {
+            "old_password": oldpw,
+            "new_password": newpw
         }
     }
     r = requests.patch(settings.CML_API_BASE_URL+api_url, headers=head, json=payload, verify=False)
@@ -103,6 +185,13 @@ def UpdateUserPassword(token, userId, oldpw, newpw):
     return r.status_code
 
 def SendEmail(email, title, content, attachments=None):
+    """
+    Sends an email with input title and content. Attachment is optional.
+
+    Status codes:
+      Success: 202
+      Failure: any other values
+    """
     # Create message
     message = Mail(
         from_email=settings.SENDGRID_FROM_EMAIL,
@@ -145,9 +234,13 @@ def SendEmail(email, title, content, attachments=None):
         logger.info(f"SendEmail: SendGridAPI status code: {response.status_code}")
     except Exception as e:
         logger.error(f"SendEmail: Failed to send email")
+        logger.info(f"SendEmail: SendGridAPI status code: {response.status_code}")
         logger.debug(f"SendEmail: Exception: {e}")
 
 def CleanUp(email, temp_password):
+    """
+    Clean up labs when timeslot has reached the end
+    """
     # Authenticate and get all labs
     logger.info(f"CleanUp: Starting cleanup")
     token = GetToken(settings.CML_USERNAME, temp_password)
@@ -188,6 +281,9 @@ def CleanUp(email, temp_password):
     SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
 
 def CreateTempUser(email, temp_password):
+    """
+    Create an temporary password and send the credentials via email
+    """
     logger.info(f"CreateTempUser: Creating user for {email}")
     # Get token and update username
     token = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
