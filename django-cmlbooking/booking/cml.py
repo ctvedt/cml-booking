@@ -54,9 +54,9 @@ def GetNodesInLab(token, labId):
     logger.info(f"GetNodesInLab: {r.status_code}")
     return r.json(), r.status_code
 
-def SaveNodeConfig(token, labId, node):
+def GetNodeConfig(token, labId, node):
     """
-    Extract and save node config for a given node in a given lab
+    Extract node config for a given node in a given lab
 
     Status codes:
       Success: 200
@@ -65,7 +65,7 @@ def SaveNodeConfig(token, labId, node):
     api_url = f"labs/{labId}/nodes/{node}/extract_configuration"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.put(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
-    logger.info(f"SaveNodeConfig: {r.status_code}")
+    logger.info(f"GetNodeConfig: {r.status_code}")
     return r.json(), r.status_code
 
 def DownloadLab(token, labId):
@@ -262,11 +262,15 @@ def CleanUp(email, temp_password):
             nodes, statuscode = GetNodesInLab(token, lab)
             if not statuscode == 200:
                 logger.error(f"CleanUp: GetNodesInLab FAILED for {lab}")
-                error_trace.append("02: GetNodedInLab failed!")
+                error_trace.append(f"02: GetNodedInLab failed for {lab}")
             else:
                 for node in nodes:
-                    # TODO: Extract of config only works if node is running, so should check that first
-                    savenode, statuscode = SaveNodeConfig(token, lab,node)
+                    # Note! Extract of config only works if node is running,
+                    #       so non-running nodes will not be part of lab export
+                    nodeconfig, statuscode = GetNodeConfig(token, lab,node)
+                    if not statuscode == 200:
+                        logger.error(f"CleanUp: GetNodeConfig FAILED for {node}")
+                        error_trace.append(f"03: GetNodeConfig failed for {node}")
 
                 # Append lab to list of labs
                 userlabs.append(lab)
@@ -277,6 +281,7 @@ def CleanUp(email, temp_password):
                     SaveLab(lab, downloadlab)
                 else:
                     logger.error(f"CleanUp: DownloadLab FAILED for lab {lab}.")
+                    error_trace.append(f"04: DownloadLab failed for {lab}")
                 
                 # Stop, wipe and delete lab
                 statuscode = StopLab(token, lab)
@@ -284,22 +289,24 @@ def CleanUp(email, temp_password):
                     statuscode = WipeLab(token, lab)
                 else:
                     logger.error(f"CleanUp: WipeLab FAILED for lab {lab}.")
+                    error_trace.append(f"05: WipeLab failed for {lab}")
 
                 statuscode = DeleteLab(token, lab)
                 if not statuscode == 204:
                     logger.error(f"CleanUp: DeleteLab FAILED for lab {lab}.")
+                    error_trace.append(f"06: DeleteLab failed for {lab}")
         
         # Get admin id
         adminid, statuscode = GetAdminId(token)
         if not statuscode == 200:
-            error_trace.append("03: GetAdminId failed!")
+            error_trace.append("07: GetAdminId failed!")
             logger.error(f"CleanUp: GetAdminId FAILED!")
         else:
             # Reset password
             statuscode = UpdateUserPassword(token, adminid, temp_password, settings.CML_PASSWORD)
 
             if not statuscode == 200:
-                error_trace.append("04: UpdateUserPassword failed!")
+                error_trace.append("08: UpdateUserPassword failed!")
                 logger.error(f"CleanUp: UpdateUserPassword FAILED!")
             else:
                 # Password reset OK
@@ -307,12 +314,12 @@ def CleanUp(email, temp_password):
                 # Re-authenticate and log out all users
                 token, statuscode = GetToken(settings.CML_USERNAME, settings.CML_PASSWORD)
                 if not statuscode == 200:
-                    error_trace.append("05: GetToken FAILED after changing password!")
+                    error_trace.append("09: GetToken FAILED after changing password!")
                     logger.error(f"CleanUp: GetToken FAILED after changing password!")
                 else:
                     statuscode = LogAllUsersOut(token)
                     if not statuscode == 200:
-                        error_trace.append("06: LogAllUsersOut FAILED after changing password!")
+                        error_trace.append("10: LogAllUsersOut FAILED after changing password!")
                         logger.error(f"CleanUp: LogAllUsersOut FAILED after changing password!")
 
                 # Loop through the labs and create list of attachments, if any
@@ -330,7 +337,7 @@ def CleanUp(email, temp_password):
                 body = render_to_string('booking/email_teardown.html', context)
                 statuscode = SendEmail(email, 'Community Network - CML reservasjon er utløpt', body, attachments)
                 if not statuscode == 202:
-                    error_trace.append("06: SendEmail FAILED after cleanup!")
+                    error_trace.append("11: SendEmail FAILED after cleanup!")
                     logger.error(f"CleanUp: SendEmail FAILED after cleanup!")
 
 
