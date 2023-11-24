@@ -76,6 +76,9 @@ def start():
     if settings.DEBUG:
         logging.basicConfig()
         logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig()
+        logging.getLogger('apscheduler').setLevel(logging.INFO)
 
     # Tear down running labs two minutes before time is up
     scheduler.add_job(
