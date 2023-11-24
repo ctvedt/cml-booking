@@ -201,7 +201,9 @@ def SendEmail(email, title, content, attachments=None):
 
     # Add BCC if configured
     if (settings.SENDGRID_BCC_EMAIL):
-        message.add_bcc(settings.SENDGRID_BCC_EMAIL)
+        # Do not BCC if email and BCC is equal
+        if email != settings.SENDGRID_BCC_EMAIL:
+            message.add_bcc(settings.SENDGRID_BCC_EMAIL)
 
     # If there are any attachment to be sendt
     if attachments:
@@ -401,4 +403,3 @@ def CreateTempUser(email, temp_password):
         # Lets drop the admin an email as well
         if (settings.SENDGRID_BCC_EMAIL):
             SendEmail(settings.SENDGRID_BCC_EMAIL, 'Community Network - CreateTempUser failed!', f'CreateTempUser failed. Error reason: { error_trace }')
-
