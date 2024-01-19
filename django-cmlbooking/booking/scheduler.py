@@ -76,11 +76,14 @@ def start():
     if settings.DEBUG:
         logging.basicConfig()
         logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig()
+        logging.getLogger('apscheduler').setLevel(logging.INFO)
 
     # Tear down running labs two minutes before time is up
     scheduler.add_job(
         TearDownLab, 
-        trigger=CronTrigger(minute="59"), 
+        trigger=CronTrigger(minute="57"), 
         id="CML_TearDownLab", 
         max_instances=1,
         replace_existing=True
