@@ -43,16 +43,25 @@ def GetListOfAllLabs(token):
 def GetNodesInLab(token, labId):
     """
     Return a list of all nodes in a given lab
+    including state of node
 
     Status codes:
       Success: 200
       Failure: any other values
     """
-    api_url = f"labs/{labId}/nodes?data=false"
+    api_url = f"labs/{labId}/nodes?data=true"
     head = {'Authorization': f'Bearer {token}'}
     r = requests.get(settings.CML_API_BASE_URL+api_url, headers=head, verify=False)
     logger.info(f"GetNodesInLab: {r.status_code}")
-    return r.json(), r.status_code
+
+    # Loop through data and extract only id and state for nodes
+    data = r.json()
+    nodelist = []
+
+    for nodes in data:
+      nodelist.append((nodes['id'],nodes['state']))
+
+    return nodelist, r.status_code
 
 def GetNodeConfig(token, labId, node):
     """
@@ -267,12 +276,17 @@ def CleanUp(email, temp_password):
                 error_trace.append(f"02: GetNodedInLab failed for {lab}")
             else:
                 for node in nodes:
-                    # Note! Extract of config only works if node is running,
-                    #       so non-running nodes will not be part of lab export
-                    nodeconfig, statuscode = GetNodeConfig(token, lab,node)
-                    if not statuscode == 200:
-                        logger.error(f"CleanUp: GetNodeConfig FAILED for {node}")
-                        error_trace.append(f"03: GetNodeConfig failed for {node}")
+                    # Unpack node id and state
+                    node_id, node_state = node
+
+                    # Config can only be extracted for running nodes
+                    if node_state == "BOOTED":
+                        nodeconfig, statuscode = GetNodeConfig(token, lab, node_id)
+                        if not statuscode == 200:
+                            logger.error(f"CleanUp: GetNodeConfig FAILED for {node_id}")
+                            error_trace.append(f"03: GetNodeConfig failed for {node_id}")
+                    else:
+                        logger.info(f"CleanUp: INFO: GetNodeConfig not possible for {node_id} with state {node_state}")
 
                 # Append lab to list of labs
                 userlabs.append(lab)
