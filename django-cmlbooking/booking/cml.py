@@ -285,8 +285,10 @@ def CleanUp(email, temp_password):
                         if not statuscode == 200:
                             logger.error(f"CleanUp: GetNodeConfig FAILED for {node_id}")
                             error_trace.append(f"03: GetNodeConfig failed for {node_id}")
+                        else:
+                            logger.info(f"CleanUp: GetNodeConfig extracted config for {node_id} with state {node_state}")
                     else:
-                        logger.info(f"CleanUp: INFO: GetNodeConfig not possible for {node_id} with state {node_state}")
+                        logger.info(f"CleanUp: GetNodeConfig not possible for {node_id} with state {node_state}")
 
                 # Append lab to list of labs
                 userlabs.append(lab)
